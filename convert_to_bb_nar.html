@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.0.0.min.js"></script>
+    
+    <style>
+      h2 {
+        color: black;
+        text-align: center;
+      }
+
+      .axis {
+        font-family: arial;
+        font-size: 0.6em;
+      }
+
+      path {
+        fill: none;
+        stroke: black;
+        stroke-width: 2px;
+      }
+
+      .tick {
+        fill: none;
+        stroke: black;
+      }
+
+      circle {
+        opacity: 1;
+        stroke: none;
+      }
+      
+      .line_plot {
+        fill: none;
+        stroke: #4eb0bb;
+        stroke-width: 1px;
+      }
+    </style>
+
+    <script type="text/javascript">
+      function draw(data) {
+      
+      /*
+        D3.js setup code
+      */
+
+          "use strict";
+          var margin = 75,
+			width = 1400 - margin,
+            height = 600 - margin;
+
+          var radius = 3;
+          var color = "blue";
+			d3.select("body")
+			  .append("h2")
+              .text("Home Runs (HR) relative to Body Mass Index for 891 Baseball Players")
+
+          var svg = d3.select("body")
+            .append("svg")
+              .attr("width", width + margin)
+              .attr("height", height + margin)
+            .append('g')
+                .attr('class','chart');
+
+      /*
+        Dimple.js Chart construction code
+      */
+
+          d3.select("svg")
+            .selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+			//.append("title")
+			//.text(function(d) {return d.name; });
+			
+		  svg.append("text")             // text label for the x axis
+			.attr("x", (width / 2) )
+			.attr("y",  height+30)
+			.attr("dy", ".71em")
+			.style("text-anchor", "middle")
+			.style("font-size", "16px")
+			.text("Body Mass Index");
+			
+		  svg.append("text")             // text label for the y axis
+			.attr("x", (15) )
+			.attr("y", (height/2))
+			.attr("dy", ".71em")
+			.style("text-anchor", "middle")
+			.style("font-size", "16px")
+			.text("HR");
+
+          // Find range of BMI column & change time_extent variable to x_extent
+          var x_extent = d3.extent(data, function(d) {
+              return d['BMI'];
+          });
+
+          // Find range of HR column -- converted to bb
+          var count_extent = d3.extent(data, function(d) {
+              return d['HR'];
+          })
+
+          // Create x-axis scale mapping BMI -> pixels -- converted time scale to x_scale, time function to scale.liner
+          //var time_scale = d3.time.scale()
+            //.range([margin, width])
+            //.domain(time_extent);
+		  var x_scale = d3.scale.linear()
+			.range([margin, width])
+			.domain(x_extent);
+
+          // Create y-axis scale mapping HR -> pixels -- converted to bb
+          var count_scale = d3.scale.linear()
+            .range([height, margin])
+            .domain(count_extent);
+
+		  //Convert time to height
+          var x_axis = d3.svg.axis()
+            .scale(x_scale)
+            //.ticks(d3.time.years, 2);  not sure what to do with this to get ticks// may need to change css code
+
+          var count_axis = d3.svg.axis()
+            .scale(count_scale)
+            .orient("left");
+
+          d3.select("svg")
+            .append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(x_axis);
+
+          d3.select("svg")
+            .append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + margin + ",0)")
+            .call(count_axis);
+
+
+		  //converted to bb changed time scale to count_x_scale & date to BMI
+          d3.selectAll("circle")
+            //.attr("cx", function(d) {
+            //    return time_scale(d["date"]);
+            //})
+			.attr("cx", function(d) {
+				if(d['ave']!=0); 
+					return x_scale(d["bm"]);
+				}) 
+            .attr("cy", function(d) {
+				if(d['ave']!=0);
+					return count_scale(d["HR"]);
+            })
+            .attr("r", radius)
+            //.attr("fill", color);
+			//COLOR CIRCLES RED WHEN HR >250
+			.attr('fill', function(d) {
+				if (d['HR'] > 250){
+					//circle {
+					//	opacity: 1;
+					//}
+					return 'red';
+				} else {
+					return color;
+				}
+			})
+			.append("svg:title") //append title
+				.text(function(d) { return d.name; });
+		  });
+			//.on("mouseover", function(d) {
+			//	tooltip.transition()
+			//		.duration(200)
+			//		.style("opacity", .9);
+			//	tooltip.html(d["name"])
+			//		.style("left",(d3.event.pageX + 5) + "px")
+			//		.style("top", (d3.event.pageY -28) + "px");
+				
+			//})
+			//.on("mouseout", function(d) {
+			//	tooltip.transition()
+			//		.duration(500)
+			//		.style("opacity",0);
+			//});
+			//attempting to add baseball player name
+			
+		  //var tooltip = d3.select("body").append("div")
+			//.attr("class", "tooltip")
+			//.style("opacity", 0);
+			
+		  //function mouseover_f(d) {
+			//d3.select(this).style("stroke", "black");
+			//tooltip.transition().style("opacity",1);
+			//tooltip.html(d.name)
+				//.style("left", (d3.event.pageX + 5)+"px")
+				//.style("top", (d3.event.pageY-28)+"px");
+		  //}
+			//.append("svg:title")
+			//.text(function(d) {return d.name; });
+				
+			//});  had to comment out to retain structure of section
+		  //adding legend and converting to baseball
+		  var legend = svg.append("g")
+              .attr("class", "legend")
+              .attr("transform", "translate(" + (width - 100) + "," + 20 + ")")
+              .selectAll("g")
+              .data([">250 HR Player", "<250 HR Player"])
+              .enter().append("g");
+
+          legend.append("circle")
+              .attr("cy", function(d, i) {
+                  return i * 30;
+              })
+			  .attr("r", radius)
+              //.attr("r", function(d) {
+              //    if (d == ">250 HR") {
+              //        return radius * multiplier;
+              //    } else {
+              //        return radius;
+              //    }
+              //})
+              .attr("fill", function(d) {
+                  if (d == ">250 HR Player") {
+                      return 'red';
+                  } else {
+                      return 'blue';
+                  }
+              });
+
+          legend.append("text")
+              .attr("y", function(d, i) {
+                  return i * 30 + 5;
+              })
+              .attr("x", radius * 5)
+              .text(function(d) {
+                  return d;
+              });
+        };
+
+    </script>
+  </head>
+<body>
+  <script type="text/javascript">
+  /*
+    Use D3 (not dimple.js) to load the TSV file
+    and pass the contents of it to the draw function
+  */
+
+  //example date: 27-05-1934 (16:00 h)
+  //format = d3.time.format("%d-%m-%Y (%H:%M h)"); - removed time element
+  
+  //conversion complete -- remove later
+  d3.csv("baseball_data_working.csv", function(d) {
+      // transform data
+	  //data = data.filter(function(d){
+		//if(isNaN(d.ave)){
+		//	return false;
+		//}
+		d['name'] = +d['name'];
+		d['pheight'] = +d['height'];
+		d['weight'] = +d['weight'];
+		d['ave'] = +d['ave'];
+		d['100ave'] = +d['ave']*100;
+		d['HR'] = +d['HR'];
+		d.bm = (+d.weight/(d.pheight*d.pheight))*703;
+		d.BMI = d3.round(d.bm,2);
+		//return true;
+	  //});
+      return d;  
+  }, draw);
+  </script>
+</body>
+</html>
+
+
